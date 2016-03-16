@@ -1,6 +1,6 @@
 /*
  * SIP version 0.7.0
- * Copyright (c) 2014-2015 Junction Networks, Inc <http://www.onsip.com>
+ * Copyright (c) 2014-2016 Junction Networks, Inc <http://www.onsip.com>
  * Homepage: http://sipjs.com
  * License: http://sipjs.com/license/
  *
@@ -11291,13 +11291,18 @@ MediaStreamManager.prototype = Object.create(SIP.EventEmitter.prototype, {
           return callback.apply(null, callbackArgs);
         }.bind(this);
 
-        deferred.resolve(
-          SIP.WebRTC.getUserMedia(constraints)
-          .then(
-            emitThenCall.bind(this, 'userMedia', saveSuccess.bind(null, false)),
-            emitThenCall.bind(this, 'userMediaFailed', function(e){throw e;})
-          )
-        );
+        if (constraints.audio || constraints.video) {
+          deferred.resolve(
+            SIP.WebRTC.getUserMedia(constraints)
+            .then(
+              emitThenCall.bind(this, 'userMedia', saveSuccess.bind(null, false)),
+              emitThenCall.bind(this, 'userMediaFailed', function(e){throw e;})
+            )
+          );
+        } else {
+          // Local streams were explicitly excluded.
+          deferred.resolve([]);
+        }
       }.bind(this), 0);
 
       return deferred.promise;
